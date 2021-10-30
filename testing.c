@@ -30,9 +30,6 @@ struct feature
     float sit;
 };
 
-
-
-
 //So that it can read 100 line of text file
 struct dataset volunteers[100];
 
@@ -88,24 +85,33 @@ int main(void) {
             trainingF[i].smoke = volunteers[i].smoke;
             trainingF[i].sit = volunteers[i].sit;
             trainingO[i] = volunteers[i].output;
+
+            /*
+            printf("%.2f %.2f %d %d %d %d %.2f %d %.2f %d\n", trainingF[i].season, 
+                trainingF[i].age, trainingF[i].disease, trainingF[i].trauma, 
+                trainingF[i].surgical, trainingF[i].fever, trainingF[i].freq, 
+                trainingF[i].smoke, trainingF[i].sit, trainingO[i]);
+            */
         }
 
-        for(i = 80; i <= count; i++){
-            testingF[i].season = volunteers[i].season;
-            testingF[i].age = volunteers[i].age;
-            testingF[i].disease = volunteers[i].disease;
-            testingF[i].trauma = volunteers[i].trauma;
-            testingF[i].surgical = volunteers[i].surgical;
-            testingF[i].fever = volunteers[i].fever;
-            testingF[i].freq = volunteers[i].freq;
-            testingF[i].smoke = volunteers[i].smoke;
-            testingF[i].sit = volunteers[i].sit;
-            testingO[i] = volunteers[i].output;
+        for(i = 80; i < 100; i++){
+            testingF[i-80].season = volunteers[i].season;
+            testingF[i-80].age = volunteers[i].age;
+            testingF[i-80].disease = volunteers[i].disease;
+            testingF[i-80].trauma = volunteers[i].trauma;
+            testingF[i-80].surgical = volunteers[i].surgical;
+            testingF[i-80].fever = volunteers[i].fever;
+            testingF[i-80].freq = volunteers[i].freq;
+            testingF[i-80].smoke = volunteers[i].smoke;
+            testingF[i-80].sit = volunteers[i].sit;
+            testingO[i-80] = volunteers[i].output;
 
-            printf("%.2f %.2f %d %d %d %d %.2f %d %.2f \n", testingF[i].season, 
-                testingF[i].age, testingF[i].disease, testingF[i].trauma, 
-                testingF[i].surgical, testingF[i].fever, testingF[i].freq, 
-                testingF[i].smoke, testingF[i].sit);
+            /*
+            printf("%.2f %.2f %d %d %d %d %.2f %d %.2f %d\n", testingF[i-80].season, 
+                testingF[i-80].age, testingF[i-80].disease, testingF[i-80].trauma, 
+                testingF[i-80].surgical, testingF[i-80].fever, testingF[i-80].freq, 
+                testingF[i-80].smoke, testingF[i-80].sit, testingO[i-80]);
+            */
         }
     }
 }
