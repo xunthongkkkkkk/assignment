@@ -53,13 +53,13 @@ float Gaussian(float inputx, float *mean, float *varience);
 
 
 //So that it can read 100 line of text file
-struct dataset volunteers[100];
+struct dataset *volunteers;
 
 //Feature and Output set for training & testing set
-struct feature trainingF[80];
-int trainingO[80];
-struct feature testingF[20];
-int testingO[20];
+struct feature *trainingF;
+int *trainingO;
+struct feature *testingF;
+int *testingO;
 int arrlength;
 
 /*array to store the prior and posterior probability for both normal (0) and altered(1). Prior Probability is stored in index 0.
@@ -93,6 +93,15 @@ int main(void) {
                 count++;
             }
         }
+        volunteers=malloc(sizeof(struct dataset)*(count+1));
+
+        printf("\n There are %d lines of data in the file provided. \nPlease enter which line the testing data starts:",count+1);
+        scanf("%d",&datasplit);
+        trainingF=malloc(sizeof(struct feature)*(datasplit-1));
+        trainingO=malloc(sizeof(int)*(datasplit-1));
+        testingF=malloc(sizeof(struct feature)*(1+count-datasplit));
+        testingO=malloc(sizeof(int)*(1+count-datasplit));
+        arrlength = datasplit-1;
         
         //Set file position to the beginning of the file of the given stream
         rewind(file);
@@ -106,7 +115,7 @@ int main(void) {
                 &volunteers[i].smoke, &volunteers[i].sit, &volunteers[i].output);
         }
 
-        for(i = 0; i < 80; i++){
+        for(i = 0; i < datasplit-1; i++){
             trainingF[i].season = volunteers[i].season;
             trainingF[i].age = volunteers[i].age;
             trainingF[i].disease = volunteers[i].disease;
@@ -125,18 +134,22 @@ int main(void) {
                 trainingF[i].smoke, trainingF[i].sit, trainingO[i]);
             */
         }
+        
+        int storecount=0;
 
-        for(i = 80; i < 100; i++){
-            testingF[i-80].season = volunteers[i].season;
-            testingF[i-80].age = volunteers[i].age;
-            testingF[i-80].disease = volunteers[i].disease;
-            testingF[i-80].trauma = volunteers[i].trauma;
-            testingF[i-80].surgical = volunteers[i].surgical;
-            testingF[i-80].fever = volunteers[i].fever;
-            testingF[i-80].freq = volunteers[i].freq;
-            testingF[i-80].smoke = volunteers[i].smoke;
-            testingF[i-80].sit = volunteers[i].sit;
-            testingO[i-80] = volunteers[i].output;
+
+        for(i = datasplit-1; i < count+1; i++){
+            testingF[storecount].season = volunteers[i].season;
+            testingF[storecount].age = volunteers[i].age;
+            testingF[storecount].disease = volunteers[i].disease;
+            testingF[storecount].trauma = volunteers[i].trauma;
+            testingF[storecount].surgical = volunteers[i].surgical;
+            testingF[storecount].fever = volunteers[i].fever;
+            testingF[storecount].freq = volunteers[i].freq;
+            testingF[storecount].smoke = volunteers[i].smoke;
+            testingF[storecount].sit = volunteers[i].sit;
+            testingO[storecount] = volunteers[i].output;
+            storecount++;
 
             /*
             printf("%.2f %.2f %d %d %d %d %.2f %d %.2f %d\n", testingF[i-80].season, 
@@ -146,7 +159,6 @@ int main(void) {
             */
         }
     }
-    arrlength = (int)sizeof(trainingO)/(int)sizeof(trainingO[0]);
     NBProbability();
     float input;
     printf("\n test normal age gaussian: ");
