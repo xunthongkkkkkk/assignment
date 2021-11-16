@@ -20,18 +20,6 @@ struct dataset
     int output;
 };
 
-struct feature
-{
-    float season;
-    float age;
-    int disease;
-    int trauma;
-    int surgical;
-    int fever;
-    float freq;
-    int smoke;
-    float sit;
-};
 
 // Function to calculate the probability for both NB and Gaussian.
 //void ProbabilityCalculator();
@@ -49,18 +37,13 @@ void Mean(float *sum, float *count, float *meanstorelocation);
 void variancesquared(float *mean, float *count, int outcome, int feature, float *variencestorelocation);
 
 // Function to calculate and return the gaussian probability 
-float Gaussian(float inputx, float *mean, float *varience);
+long double Gaussian(float inputx, float *mean, float *varience);
 
 
 //So that it can read 100 line of text file
 struct dataset *volunteers;
 
 //Feature and Output set for training & testing set
-struct feature *trainingF;
-int *trainingO;
-struct feature *testingF;
-int *testingO;
-int arrlength;
 
 /*array to store the prior and posterior probability for both normal (0) and altered(1). Prior Probability is stored in index 0.
 The remaining features are indexed as per listed on the AE document 
@@ -70,8 +53,10 @@ float Probability[2][22];
  Syntax: GaussianMeanVarience[outcome][feature][mean/varience]
 */
 float GaussianMeanVariance[2][2][2];
+int datasplit; //stores the line the data starts spliting between testing and training
 
 int main(void) {
+
     //Read text file
     FILE *file = fopen("fertility_Diagnosis_Data_Group5_8.txt", "r");
     
@@ -93,16 +78,15 @@ int main(void) {
                 count++;
             }
         }
+        
         volunteers=malloc(sizeof(struct dataset)*(count+1));
 
         printf("\n There are %d lines of data in the file provided. \nPlease enter which line the testing data starts:",count+1);
         scanf("%d",&datasplit);
-        trainingF=malloc(sizeof(struct feature)*(datasplit-1));
-        trainingO=malloc(sizeof(int)*(datasplit-1));
-        testingF=malloc(sizeof(struct feature)*(1+count-datasplit));
-        testingO=malloc(sizeof(int)*(1+count-datasplit));
-        arrlength = datasplit-1;
+
+
         
+
         //Set file position to the beginning of the file of the given stream
         rewind(file);
 
@@ -115,55 +99,10 @@ int main(void) {
                 &volunteers[i].smoke, &volunteers[i].sit, &volunteers[i].output);
         }
 
-        for(i = 0; i < datasplit-1; i++){
-            trainingF[i].season = volunteers[i].season;
-            trainingF[i].age = volunteers[i].age;
-            trainingF[i].disease = volunteers[i].disease;
-            trainingF[i].trauma = volunteers[i].trauma;
-            trainingF[i].surgical = volunteers[i].surgical;
-            trainingF[i].fever = volunteers[i].fever;
-            trainingF[i].freq = volunteers[i].freq;
-            trainingF[i].smoke = volunteers[i].smoke;
-            trainingF[i].sit = volunteers[i].sit;
-            trainingO[i] = volunteers[i].output;
-
-            /*
-            printf("%.2f %.2f %d %d %d %d %.2f %d %.2f %d\n", trainingF[i].season, 
-                trainingF[i].age, trainingF[i].disease, trainingF[i].trauma, 
-                trainingF[i].surgical, trainingF[i].fever, trainingF[i].freq, 
-                trainingF[i].smoke, trainingF[i].sit, trainingO[i]);
-            */
-        }
-        
-        int storecount=0;
-
-
-        for(i = datasplit-1; i < count+1; i++){
-            testingF[storecount].season = volunteers[i].season;
-            testingF[storecount].age = volunteers[i].age;
-            testingF[storecount].disease = volunteers[i].disease;
-            testingF[storecount].trauma = volunteers[i].trauma;
-            testingF[storecount].surgical = volunteers[i].surgical;
-            testingF[storecount].fever = volunteers[i].fever;
-            testingF[storecount].freq = volunteers[i].freq;
-            testingF[storecount].smoke = volunteers[i].smoke;
-            testingF[storecount].sit = volunteers[i].sit;
-            testingO[storecount] = volunteers[i].output;
-            storecount++;
-
-            /*
-            printf("%.2f %.2f %d %d %d %d %.2f %d %.2f %d\n", testingF[i-80].season, 
-                testingF[i-80].age, testingF[i-80].disease, testingF[i-80].trauma, 
-                testingF[i-80].surgical, testingF[i-80].fever, testingF[i-80].freq, 
-                testingF[i-80].smoke, testingF[i-80].sit, testingO[i-80]);
-            */
-        }
     }
+    
     NBProbability();
-    float input;
-    printf("\n test normal age gaussian: ");
-    scanf("%f", &input);
-    printf("\n gaussian test: %f",Gaussian(input,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1]));
+    
 }
 
 /*
@@ -176,12 +115,12 @@ void ProbabilityCalculator()
 
 void NBProbability()
 {    
-    printf("Size of array: %d", arrlength);
+    printf("Size of array: %d", datasplit-1);
     //Loops through the total size of the training set. Gets the limit from the size of the output array as output array and features strut are One to One
-    for(int i = 0; i < arrlength; i++)
+    for(int i = 0; i < datasplit; i++)
     {
         //Determines if the sample is normal(0) or altered(1)
-        switch (trainingO[i])
+        switch (volunteers[i].output)
         {
         case 0 : //normal
             Count(0,i);
@@ -219,8 +158,8 @@ void NBProbability()
     }
 
     //determining prior probability
-    Probability[0][0] = Probability[0][0]/arrlength;
-    Probability[1][0] = Probability[1][0]/arrlength;
+    Probability[0][0] = Probability[0][0]/(datasplit-1);
+    Probability[1][0] = Probability[1][0]/(datasplit-1);
     printf("\nPrior Prob:\n Normal: %f \n Altered: %f", Probability[0][0],Probability[1][0]);
     
 }
@@ -230,25 +169,25 @@ void Count(int outcome, int i)
 {
     // Count for the different seasons
     Probability[outcome][0]++;
-    if (trainingF[i].season == -1) //Winter
+    if (volunteers[i].season == -1) //Winter
     {
         Probability[outcome][1]++;
     }
-    else if (trainingF[i].season == -0.33) //Spring
+    else if (volunteers[i].season == (float)(-0.33)) //Spring
     {
         Probability[outcome][2]++;
     }
-    else if (trainingF[i].season == 0.33) //Summer
+    else if (volunteers[i].season == (float)(0.33)) //Summer
     {
         Probability[outcome][3]++;
     }
-    else if (trainingF[i].season == 1) //Fall
+    else if (volunteers[i].season == 1) //Fall
     {
         Probability[outcome][4]++;
     }
     
     //Determining the count for the disease
-    switch (trainingF[i].disease)
+    switch (volunteers[i].disease)
     {
     case 0: //Yes
         Probability[outcome][5]++;
@@ -259,7 +198,7 @@ void Count(int outcome, int i)
         break;
     }
 
-    switch (trainingF[i].trauma)
+    switch (volunteers[i].trauma)
     {
     case 0: //Yes
         Probability[outcome][7]++;
@@ -270,7 +209,7 @@ void Count(int outcome, int i)
         break;
     }
 
-    switch (trainingF[i].surgical)
+    switch (volunteers[i].surgical)
     {
     case 0: //Yes
         Probability[outcome][9]++;
@@ -281,7 +220,7 @@ void Count(int outcome, int i)
         break;
     }
 
-    switch (trainingF[i].fever)
+    switch (volunteers[i].fever)
     {
     case -1: //< 3 months ago
         Probability[outcome][11]++;
@@ -296,28 +235,28 @@ void Count(int outcome, int i)
         break;     
     }
 
-    if (trainingF[i].freq == 0.2) // Several times a day
+    if (volunteers[i].freq == (float)(0.2)) // Several times a day
     {
         Probability[outcome][14]++;
     }
-    else if (trainingF[i].freq == 0.4) // Every Day
+    else if (volunteers[i].freq == (float)(0.4)) // Every Day
     {
         Probability[outcome][15]++;
     }
-    else if (trainingF[i].freq == 0.6) // Several Times a week
+    else if (volunteers[i].freq == (float)(0.6)) // Several Times a week
     {
         Probability[outcome][16]++;
     }
-    else if (trainingF[i].freq == 0.8) // Once a week
+    else if (volunteers[i].freq == (float)(0.8)) // Once a week
     {
         Probability[outcome][17]++;
     }
-    else if (trainingF[i].freq == 1) // Hardly
+    else if (volunteers[i].freq == 1) // Hardly
     {
         Probability[outcome][18]++;
     }
     
-    switch (trainingF[i].smoke)
+    switch (volunteers[i].smoke)
     {
     case -1:  //never
         Probability[outcome][19]++;
@@ -333,9 +272,9 @@ void Count(int outcome, int i)
     }
 
     // Used to obtain the summation of the normal and altered values for features requiring gaussian
-    GaussianMeanVariance[outcome][0][0]+=trainingF[i].age;
-    printf("\n %d normal age sum %f",i ,GaussianMeanVariance[0][0][0]);
-    GaussianMeanVariance[outcome][1][0]+=trainingF[i].sit;
+    GaussianMeanVariance[outcome][0][0]+=volunteers[i].age;
+    printf("\n %d normal age (%f) sum %f",i ,volunteers[i].age,GaussianMeanVariance[0][0][0]);
+    GaussianMeanVariance[outcome][1][0]+=volunteers[i].sit;
 
 }
 
@@ -355,22 +294,22 @@ void variancesquared(float *mean, float *count, int outcome, int feature, float 
     switch (feature)
     {
     case 0:
-        for (int i = 0; i < arrlength; i++)
+        for (int i = 0; i < datasplit; i++)
         {
-            if(trainingO[i]==outcome)
+            if(volunteers[i].output==outcome)
             {
-                *variencestorelocation += pow((trainingF[i].age-*mean),2);
+                *variencestorelocation += pow((volunteers[i].age-*mean),2);
             }
         }
         
         break;
     
     case 1:
-        for (int i = 0; i < arrlength; i++)
+        for (int i = 0; i < datasplit; i++)
         {
-            if(trainingO[i]==outcome)
+            if(volunteers[i].output==outcome)
             {
-                *variencestorelocation += pow((trainingF[i].sit-*mean),2);
+                *variencestorelocation += pow((volunteers[i].sit-*mean),2);
             }
         }
         break;
@@ -380,7 +319,7 @@ void variancesquared(float *mean, float *count, int outcome, int feature, float 
     printf("\n varience: %f", *variencestorelocation);
 }
 
-float Gaussian(float inputx, float *mean, float *varience)
+long double Gaussian(float inputx, float *mean, float *varience)
 {
     return (1/(sqrt(2*pi)))*exp(-0.5*(pow((inputx-*mean),2)/ *varience ));
 
