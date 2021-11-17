@@ -45,7 +45,7 @@ struct dataset *volunteers;
 
 //Feature and Output set for training & testing set
 
-/*array to store the prior and posterior probability for both normal (0) and altered(1). Prior Probability is stored in index 0.
+/*array to store the prior and conditional probability for both normal (0) and altered(1). Prior Probability is stored in index 0.
 The remaining features are indexed as per listed on the AE document 
 Syntax: Probability[Outcome][feature]  */
 float Probability[2][22];
@@ -131,7 +131,7 @@ void NBProbability()
             break;
         }
     }
-    //Determining posterior probability
+    //Determining conditional probability
     for (int k = 0; k < 2; k++)
     {
         for (int j = 1; j < 22; j++)
