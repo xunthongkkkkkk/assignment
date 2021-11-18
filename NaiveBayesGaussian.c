@@ -37,7 +37,13 @@ void Mean(float *sum, float *count, float *meanstorelocation);
 void variancesquared(float *mean, float *count, int outcome, int feature, float *variencestorelocation);
 
 // Function to calculate and return the gaussian probability 
-long double Gaussian(float inputx, float *mean, float *varience);
+double Gaussian(float inputx, float *mean, float *varience);
+
+// Function to grab probability of feature
+float NBProbabilityGrab(int output,int feature,float input);
+
+// Function to calculate posterior probability and print prediction
+void ProbabilityMain(int count);
 
 
 //So that it can read 100 line of text file
@@ -57,6 +63,7 @@ int datasplit; //stores the line the data starts spliting between testing and tr
 
 int main(void) {
 
+    int count = 0;
     //Read text file
     FILE *file = fopen("fertility_Diagnosis_Data_Group5_8.txt", "r");
     
@@ -68,7 +75,7 @@ int main(void) {
     else {
         //Check for number of line
         char ch;
-        int count = 0;
+        
 
         while (ch != EOF)
         {
@@ -102,6 +109,7 @@ int main(void) {
     }
     
     NBProbability();
+    ProbabilityMain(count);
     
 }
 
@@ -319,8 +327,114 @@ void variancesquared(float *mean, float *count, int outcome, int feature, float 
     printf("\n varience: %f", *variencestorelocation);
 }
 
-long double Gaussian(float inputx, float *mean, float *varience)
+double Gaussian(float inputx, float *mean, float *varience)
 {
     return (1/(sqrt(2*pi)))*exp(-0.5*(pow((inputx-*mean),2)/ *varience ));
 
+}
+
+float NBProbabilityGrab(int output,int feature,float input){
+
+    if(feature == 1){
+        if (input == -1){
+            return Probability[output][1];      //Winter
+        }
+        else if (input == (float)(-0.33)){
+            return Probability[output][2];       //Spring
+        }
+        else if (input == (float)(0.33)){
+            return Probability[output][3];      //Summer
+        }
+        else if (input == 1){
+            return Probability[output][4];       //Fall
+        }
+    }
+    if(feature == 3){
+        if (input == 0){
+            return Probability[output][5];      //Yes
+        }
+        else if (input == 1){
+            return Probability[output][6];       //No
+        }
+    }
+    if(feature == 4){
+        if (input == 0){
+            return Probability[output][7];       //Yes
+        }
+        else if (input == 1){
+            return Probability[output][8];       //No
+        }
+    }
+    if(feature == 5){
+        if (input == 0){
+            return Probability[output][9];       //Yes
+        }
+        else if (input == 1){
+            return Probability[output][10];       //No
+        }
+    }
+    if(feature == 6){
+        if (input == -1){
+            return Probability[output][11];       //Less than 3 months ago
+        }
+        else if (input == 0){
+            return Probability[output][12];       //More than 3 months ago
+        }
+        else if (input == 1){
+            return Probability[output][13];      //No
+        }
+    }
+    if(feature == 7){
+        if (input == (float)(0.2)){
+            return Probability[output][14];       //Saveral times a day
+        }
+        else if (input == (float)(0.4)){
+            return Probability[output][15];       //Every day
+        }
+        else if (input == (float)(0.6)){
+            return Probability[output][16];      //Several times a week
+        }
+        else if (input == (float)(0.8)){
+            return Probability[output][17];      //Once a week
+        }
+        else if (input == 1){
+            return Probability[output][18];      //Hardly ever or never
+        }
+    }
+    if(feature == 8){
+        if (input == -1){
+            return Probability[output][19];       //Never
+        }
+        else if (input == 0){
+            return Probability[output][20];       //Occasionally
+        }
+        else if (input == 1){
+            return Probability[output][21];      //Daily
+        }
+    }
+    
+}
+
+void ProbabilityMain(int count){
+    for (int i=(datasplit-1); i <=count; i++){
+        double normalpostprob = 0;
+        double alteredpostprob = 0;
+        //printf("x = %d, y = %d", x,y);
+        normalpostprob = (NBProbabilityGrab(0,1,volunteers[i].season) *Gaussian(volunteers[i].age,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1])* NBProbabilityGrab(0,3,volunteers[i].disease) 
+        * NBProbabilityGrab(0,4,volunteers[i].trauma) * NBProbabilityGrab(0,5,volunteers[i].surgical) 
+        * NBProbabilityGrab(0,6,volunteers[i].fever) * NBProbabilityGrab(0,7,volunteers[i].freq) 
+        * NBProbabilityGrab(0,8,volunteers[i].smoke) *Gaussian(volunteers[i].sit,&GaussianMeanVariance[0][1][0],&GaussianMeanVariance[0][1][1]) * Probability[0][0]);
+
+        alteredpostprob = (NBProbabilityGrab(1,1,volunteers[i].season) *Gaussian(volunteers[i].age,&GaussianMeanVariance[1][0][0],&GaussianMeanVariance[1][0][1]) * NBProbabilityGrab(1,3,volunteers[i].disease) 
+        * NBProbabilityGrab(1,4,volunteers[i].trauma) * NBProbabilityGrab(1,5,volunteers[i].surgical) 
+        * NBProbabilityGrab(1,6,volunteers[i].fever) * NBProbabilityGrab(1,7,volunteers[i].freq) 
+        * NBProbabilityGrab(1,8,volunteers[i].smoke)*Gaussian(volunteers[i].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1])* Probability[1][0]);
+        
+        if (normalpostprob >= alteredpostprob){
+            printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Normal", i+1, normalpostprob, alteredpostprob);
+        }
+        else{
+            printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Altered", i+1, normalpostprob, alteredpostprob);
+        }
+    }
 }
