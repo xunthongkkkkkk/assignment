@@ -31,13 +31,13 @@ void NBProbability();
 void Count(int outcome, int i);
 
 // Function to calculate the mean for the features requiring gaussian Takes in the sum, and count and pointer to address of where to store the mean
-void Mean(float *sum, float *count, float *meanstorelocation);
+void Mean(double *sum, float *count, double *meanstorelocation);
 
 // Function that returns the squared varience of 
-void variancesquared(float *mean, float *count, int outcome, int feature, float *variencestorelocation);
+void variancesquared(double *mean, float *count, int outcome, int feature, double *variencestorelocation);
 
 // Function to calculate and return the gaussian probability 
-double Gaussian(float inputx, float *mean, float *varience);
+double Gaussian(float inputx, double *mean, double *varience);
 
 // Function to grab probability of feature
 float NBProbabilityGrab(int output,int feature,float input);
@@ -58,7 +58,7 @@ float Probability[2][22];
 /* array to store the both [normal(0) and altered(1)] [age(0) or time spent sitting(1)] [mean(0) and varience squared(1)].
  Syntax: GaussianMeanVarience[outcome][feature][mean/varience]
 */
-float GaussianMeanVariance[2][2][2];
+double GaussianMeanVariance[2][2][2];
 int datasplit; //stores the line the data starts spliting between testing and training
 
 int main(void) {
@@ -125,7 +125,7 @@ void NBProbability()
 {    
     printf("Size of array: %d", datasplit-1);
     //Loops through the total size of the training set. Gets the limit from the size of the output array as output array and features strut are One to One
-    for(int i = 0; i < datasplit; i++)
+    for(int i = 0; i < datasplit-1; i++)
     {
         //Determines if the sample is normal(0) or altered(1)
         switch (volunteers[i].output)
@@ -140,10 +140,11 @@ void NBProbability()
         }
     }
     //Determining conditional probability
-    for (int k = 0; k < 2; k++)
+    for (int k = 0; k <=1; k++)
     {
-        for (int j = 1; j < 22; j++)
+        for (int j = 1; j <=21; j++)
         {
+            printf("\n Before Calculation, outcome: %d  Outcome Count:: %f Variable: %d count: %f", k,Probability[k][0], j, Probability[k][j]);
             Probability[k][j] = Probability[k][j]/Probability[k][0];
             printf("\n outcome: %d Variable: %d Probability: %f", k, j, Probability[k][j]);
         }
@@ -286,7 +287,7 @@ void Count(int outcome, int i)
 
 }
 
-void Mean(float *sum, float *count, float *storelocation)
+void Mean(double *sum, float *count, double *storelocation)
 {
     printf("\n sum: %f", *sum);
     printf("\n count: %f", *count);
@@ -297,7 +298,7 @@ void Mean(float *sum, float *count, float *storelocation)
 
 }
 
-void variancesquared(float *mean, float *count, int outcome, int feature, float *variencestorelocation)
+void variancesquared(double *mean, float *count, int outcome, int feature, double *variencestorelocation)
 {
     switch (feature)
     {
@@ -327,7 +328,7 @@ void variancesquared(float *mean, float *count, int outcome, int feature, float 
     printf("\n varience: %f", *variencestorelocation);
 }
 
-double Gaussian(float inputx, float *mean, float *varience)
+double Gaussian(float inputx, double *mean, double *varience)
 {
     return (1/(sqrt(2*pi)))*exp(-0.5*(pow((inputx-*mean),2)/ *varience ));
 
@@ -416,7 +417,7 @@ float NBProbabilityGrab(int output,int feature,float input){
 }
 
 void ProbabilityMain(int count){
-    for (int i=(datasplit-1); i <=count; i++){
+    for (int i=0; i <=datasplit-1; i++){
         double normalpostprob = 0;
         double alteredpostprob = 0;
         //printf("x = %d, y = %d", x,y);
