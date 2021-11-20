@@ -61,6 +61,8 @@ float Probability[2][22];
 double GaussianMeanVariance[2][2][2];
 int datasplit; //stores the line the data starts spliting between testing and training
 
+int ConMatrix[4];//TP(1)TN(2)FP(3)FN(4)
+
 int main(void) {
 
     int count = 0;
@@ -110,6 +112,7 @@ int main(void) {
     
     NBProbability();
     ProbabilityMain(count);
+    printf("\nTrue Positive: %d \nTrue Negetive: %d \nFalse Positive: %d \nFalse Negetive %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
     
 }
 
@@ -145,7 +148,7 @@ void NBProbability()
         for (int j = 1; j <=21; j++)
         {
             printf("\n Before Calculation, outcome: %d  Outcome Count:: %f Variable: %d count: %f", k,Probability[k][0], j, Probability[k][j]);
-            Probability[k][j] = Probability[k][j]/Probability[k][0];
+            Probability[k][j] = (Probability[k][j]+1)/(Probability[k][0]+21 ); //accounts for the fact that there are features that do not appear in the training data. Setting alpha as 1
             printf("\n outcome: %d Variable: %d Probability: %f", k, j, Probability[k][j]);
         }
         
@@ -303,7 +306,7 @@ void variancesquared(double *mean, float *count, int outcome, int feature, doubl
     switch (feature)
     {
     case 0:
-        for (int i = 0; i < datasplit; i++)
+        for (int i = 0; i < datasplit-1; i++)
         {
             if(volunteers[i].output==outcome)
             {
@@ -314,7 +317,7 @@ void variancesquared(double *mean, float *count, int outcome, int feature, doubl
         break;
     
     case 1:
-        for (int i = 0; i < datasplit; i++)
+        for (int i = 0; i < datasplit-1; i++)
         {
             if(volunteers[i].output==outcome)
             {
@@ -417,7 +420,8 @@ float NBProbabilityGrab(int output,int feature,float input){
 }
 
 void ProbabilityMain(int count){
-    for (int i=0; i <=datasplit-1; i++){
+    for (int i=datasplit-1; i <=count; i++){
+        int result = 0;
         double normalpostprob = 0;
         double alteredpostprob = 0;
         //printf("x = %d, y = %d", x,y);
@@ -431,11 +435,42 @@ void ProbabilityMain(int count){
         * NBProbabilityGrab(1,6,volunteers[i].fever) * NBProbabilityGrab(1,7,volunteers[i].freq) 
         * NBProbabilityGrab(1,8,volunteers[i].smoke)*Gaussian(volunteers[i].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1])* Probability[1][0]);
         
-        if (normalpostprob >= alteredpostprob){
+        if (normalpostprob >= alteredpostprob)
+        {
             printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Normal", i+1, normalpostprob, alteredpostprob);
         }
-        else{
+        else
+        {
             printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Altered", i+1, normalpostprob, alteredpostprob);
+            result=1;
         }
+        
+        if (volunteers[i].output==result)
+        {
+            switch (result)
+            {
+            case 0:
+                ConMatrix[0]++;
+                break;
+            
+            case 1:
+                ConMatrix[1]++;
+                break;
+            }
+        }
+        else
+        {
+            switch (result)
+            {
+            case 0:
+                ConMatrix[2]++;
+                break;
+            
+            case 1:
+                ConMatrix[3]++;
+                break;
+            }
+        }
+        
     }
 }
