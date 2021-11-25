@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #define pi 3.14159
 
@@ -72,6 +73,8 @@ double tr_ProbError[5]; //50, 60, 70, 80, 90
 double te_ProbError[5]; //50, 40, 30, 20, 10
 
 int main(void) {
+    //start record time
+    clock_t start = clock();
 
     int count = 0;
     //Read text file
@@ -124,6 +127,11 @@ int main(void) {
     printf("\n\nFor Testing Data Set \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[4],ConMatrix[5],ConMatrix[6],ConMatrix[7]);
     
     plotGraph(count);
+
+    //end record time
+    clock_t end = clock();
+    double timetaken = (double)(end-start) / CLOCKS_PER_SEC;
+    printf("\n \nTime Taken to Complete the Program: %.2f sec", timetaken);
 
 }
 
@@ -615,8 +623,6 @@ void plotGraph(int count){
     //e.g 50:50, 60:40, 70:30, ...
     for(int split = 50; split <= 90; split = split + 10){
         CalProbError(split, count);
-        printf("\n\n trProbError[%d] = %f", (split/10)-5, tr_ProbError[(split/10)-5]);
-        printf("\n\n teProbError[%d] = %f", (split/10)-5, te_ProbError[(split/10)-5]);
     }
 
     //send styling command to gnu plot
