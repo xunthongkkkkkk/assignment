@@ -48,6 +48,9 @@ void ProbabilityMain(int count);
 //Function to calculate Probability of Error
 void CalProbError(int split, int count);
 
+//Function to plot graph of Probability of Error
+void plotGraph(int count);
+
 //So that it can read 100 line of text file
 struct dataset *volunteers;
 
@@ -120,53 +123,7 @@ int main(void) {
     printf("\n\nFor Training Data Set \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
     printf("\n\nFor Testing Data Set \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[4],ConMatrix[5],ConMatrix[6],ConMatrix[7]);
     
-    for(int split = 50; split <= 90; split = split + 10){
-        CalProbError(split, count);
-        printf("\n\n trProbError[%d] = %f", (split/10)-5, tr_ProbError[(split/10)-5]);
-        printf("\n\n teProbError[%d] = %f", (split/10)-5, te_ProbError[(split/10)-5]);
-    }
-
-    char *tr_commandsGnuPlot[] = {
-        "set title \"Training Set Probability of Error\"",
-        "plot 'data_tr.temp' with lines",
-        "set xlabel \"Split Value\"",
-        "set ylabel \"Probability of Error\""
-    };
-
-    char *te_commandsGnuPlot[] = {
-        "set title \"Testing Set Probability of Error\"",
-        "plot 'data_te.temp' with lines",
-        "set xlabel \"Split Value\"",
-        "set ylabel \"Probability of Error\""
-    };
-
-
-    double tr_x[5] = {50.0, 60.0, 70.0, 80.0, 90.0};
-    double te_x[5] = {50.0, 40.0, 30.0, 20.0, 10.0};
-
-    FILE *temp_tr = fopen("data_tr.temp", "w");
-    FILE *temp_te = fopen("data_te.temp", "w");
-
-    FILE *tr_gnuplot = popen("gnuplot -persistent", "w");
-    FILE *te_gnuplot = popen("gnuplot -persistent", "w");
-
-    int i;
-
-    for(int i = 0; i < 5; i++){
-        fprintf(temp_tr, "%f %f\n", tr_x[i], tr_ProbError[i]);
-    }
-
-    for(int i = 0; i < 4; i++){
-        fprintf(tr_gnuplot, "%s \n", tr_commandsGnuPlot[i]);
-    }
-
-    for(int i = 0; i < 5; i++){
-        fprintf(temp_te, "%f %f\n", te_x[i], te_ProbError[i]);
-    }
-
-    for(int i = 0; i < 4; i++){
-        fprintf(te_gnuplot, "%s \n", te_commandsGnuPlot[i]);
-    }
+    plotGraph(count);
 
 }
 
@@ -651,4 +608,62 @@ void CalProbError(int split, int count){
         }
     }
     te_ProbError[((count-split)/10)-1] = te_ProbError[((count-split)/10)-1]/(count-split);
+}
+
+void plotGraph(int count){
+    //calculate probability of error based on different split set of data
+    //e.g 50:50, 60:40, 70:30, ...
+    for(int split = 50; split <= 90; split = split + 10){
+        CalProbError(split, count);
+        printf("\n\n trProbError[%d] = %f", (split/10)-5, tr_ProbError[(split/10)-5]);
+        printf("\n\n teProbError[%d] = %f", (split/10)-5, te_ProbError[(split/10)-5]);
+    }
+
+    //send styling command to gnu plot
+    //training data plot
+    char *tr_commandsGnuPlot[] = {
+        "set title \"Training Set Probability of Error\"",
+        "plot 'data_tr.temp' with lines",
+        "set xlabel \"Split Value\"",
+        "set ylabel \"Probability of Error\""
+    };
+
+    //testing data plot
+    char *te_commandsGnuPlot[] = {
+        "set title \"Testing Set Probability of Error\"",
+        "plot 'data_te.temp' with lines",
+        "set xlabel \"Split Value\"",
+        "set ylabel \"Probability of Error\""
+    };
+
+    //x label for plotting training set and testing set
+    double tr_x[5] = {50.0, 60.0, 70.0, 80.0, 90.0};
+    double te_x[5] = {50.0, 40.0, 30.0, 20.0, 10.0};
+
+    FILE *temp_tr = fopen("data_tr.temp", "w");
+    FILE *temp_te = fopen("data_te.temp", "w");
+
+    FILE *tr_gnuplot = popen("gnuplot -persistent", "w");
+    FILE *te_gnuplot = popen("gnuplot -persistent", "w");
+
+    int i;
+
+    //pass probability of error data value to temp file
+    for(int i = 0; i < 5; i++){
+        fprintf(temp_tr, "%f %f\n", tr_x[i], tr_ProbError[i]);
+    }
+
+    //pass command to gnu plot
+    for(int i = 0; i < 4; i++){
+        fprintf(tr_gnuplot, "%s \n", tr_commandsGnuPlot[i]);
+    }
+
+    for(int i = 0; i < 5; i++){
+        fprintf(temp_te, "%f %f\n", te_x[i], te_ProbError[i]);
+    }
+
+    for(int i = 0; i < 4; i++){
+        fprintf(te_gnuplot, "%s \n", te_commandsGnuPlot[i]);
+    }
+
 }
