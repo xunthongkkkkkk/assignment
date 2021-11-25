@@ -3,6 +3,9 @@
 #include <string.h>
 #include <math.h>
 
+#include "pbPlots.h"
+#include "supportLib.h"
+
 #define pi 3.14159
 
 //A datatype that can store multiple items with different data types
@@ -45,6 +48,8 @@ float NBProbabilityGrab(int output,int feature,float input);
 // Function to calculate posterior probability and print prediction
 void ProbabilityMain(int count);
 
+//Function to calculate Probability of Error
+void CalProbError(int split, int count);
 
 //So that it can read 100 line of text file
 struct dataset *volunteers;
@@ -61,7 +66,10 @@ float Probability[2][22];
 double GaussianMeanVariance[2][2][2];
 int datasplit; //stores the line the data starts spliting between testing and training
 
-int ConMatrix[4];//TP(1)TN(2)FP(3)FN(4)
+int ConMatrix[7];//TP(1)TN(2)FP(3)FN(4)
+
+double tr_ProbError[5]; //50, 60, 70, 80, 90
+double te_ProbError[5]; //50, 40, 30, 20, 10
 
 int main(void) {
 
@@ -112,8 +120,49 @@ int main(void) {
     
     NBProbability();
     ProbabilityMain(count);
-    printf("\nTrue Positive: %d \nTrue Negetive: %d \nFalse Positive: %d \nFalse Negetive %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
+    printf("\n\nFor Training Data Set \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
+    printf("\n\nFor Testing Data Set \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[4],ConMatrix[5],ConMatrix[6],ConMatrix[7]);
     
+    for(int split = 50; split <= 90; split = split + 10){
+        CalProbError(split, count);
+        printf("\n\n trProbError[%d] = %f", (split/10)-5, tr_ProbError[(split/10)-5]);
+        printf("\n\n teProbError[%d] = %f", (split/10)-5, te_ProbError[(split/10)-5]);
+    }
+    
+    double tr_x[5] = {50.0, 60.0, 70.0, 80.0, 90.0};
+    double te_x[5] = {50.0, 40.0, 30.0, 20.0, 10.0};
+
+    FILE *tr_gnuplot = _popen("gnuplot -persistent", "w");
+    FILE *te_gnuplot = _popen("gnuplot -persistent", "w");
+
+
+    fprintf(tr_gnuplot, "plot '-'\n");
+    fprintf(te_gnuplot, "plot '-'\n");
+    
+    int i;
+
+    for(int i = 0; i < 5; i++){
+        fprintf(tr_gnuplot, "%lf %lf\n", tr_x[i], tr_ProbError[i]);
+    }
+
+    for(int i = 0; i < 5; i++){
+        fprintf(te_gnuplot, "%lf %lf\n", te_x[i], te_ProbError[i]);
+    }
+
+    fprintf(tr_gnuplot, "set xlabel Split\n");
+    fprintf(tr_gnuplot, "set ylabel ProbabilityOfError\n");
+    fprintf(tr_gnuplot, "set xrange [0:100]\n");
+    fprintf(tr_gnuplot, "set zeroaxis\n");
+    fprintf(tr_gnuplot, "set grid\n");
+    fprintf(tr_gnuplot, "set style data lines\n");
+    
+    fprintf(tr_gnuplot, "e");
+    fprintf(te_gnuplot, "e");
+
+    fflush(tr_gnuplot);
+    fflush(te_gnuplot);
+    //fclose(gnuplot);
+
 }
 
 /*
@@ -420,57 +469,181 @@ float NBProbabilityGrab(int output,int feature,float input){
 }
 
 void ProbabilityMain(int count){
-    for (int i=datasplit-1; i <=count; i++){
-        int result = 0;
-        double normalpostprob = 0;
-        double alteredpostprob = 0;
+    //training set
+    for(int t = 0; t < datasplit-1; t++){
+        int tr_result = 0;
+        double tr_normalpostprob = 0;
+        double tr_alteredpostprob = 0;
         //printf("x = %d, y = %d", x,y);
-        normalpostprob = (NBProbabilityGrab(0,1,volunteers[i].season) *Gaussian(volunteers[i].age,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1])* NBProbabilityGrab(0,3,volunteers[i].disease) 
-        * NBProbabilityGrab(0,4,volunteers[i].trauma) * NBProbabilityGrab(0,5,volunteers[i].surgical) 
-        * NBProbabilityGrab(0,6,volunteers[i].fever) * NBProbabilityGrab(0,7,volunteers[i].freq) 
-        * NBProbabilityGrab(0,8,volunteers[i].smoke) *Gaussian(volunteers[i].sit,&GaussianMeanVariance[0][1][0],&GaussianMeanVariance[0][1][1]) * Probability[0][0]);
+        tr_normalpostprob = (NBProbabilityGrab(0,1,volunteers[t].season) *Gaussian(volunteers[t].age,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1])* NBProbabilityGrab(0,3,volunteers[t].disease) 
+        * NBProbabilityGrab(0,4,volunteers[t].trauma) * NBProbabilityGrab(0,5,volunteers[t].surgical) 
+        * NBProbabilityGrab(0,6,volunteers[t].fever) * NBProbabilityGrab(0,7,volunteers[t].freq) 
+        * NBProbabilityGrab(0,8,volunteers[t].smoke) *Gaussian(volunteers[t].sit,&GaussianMeanVariance[0][1][0],&GaussianMeanVariance[0][1][1]) * Probability[0][0]);
 
-        alteredpostprob = (NBProbabilityGrab(1,1,volunteers[i].season) *Gaussian(volunteers[i].age,&GaussianMeanVariance[1][0][0],&GaussianMeanVariance[1][0][1]) * NBProbabilityGrab(1,3,volunteers[i].disease) 
-        * NBProbabilityGrab(1,4,volunteers[i].trauma) * NBProbabilityGrab(1,5,volunteers[i].surgical) 
-        * NBProbabilityGrab(1,6,volunteers[i].fever) * NBProbabilityGrab(1,7,volunteers[i].freq) 
-        * NBProbabilityGrab(1,8,volunteers[i].smoke)*Gaussian(volunteers[i].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1])* Probability[1][0]);
+        tr_alteredpostprob = (NBProbabilityGrab(1,1,volunteers[t].season) *Gaussian(volunteers[t].age,&GaussianMeanVariance[1][0][0],&GaussianMeanVariance[1][0][1]) * NBProbabilityGrab(1,3,volunteers[t].disease) 
+        * NBProbabilityGrab(1,4,volunteers[t].trauma) * NBProbabilityGrab(1,5,volunteers[t].surgical) 
+        * NBProbabilityGrab(1,6,volunteers[t].fever) * NBProbabilityGrab(1,7,volunteers[t].freq) 
+        * NBProbabilityGrab(1,8,volunteers[t].smoke)*Gaussian(volunteers[t].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1])* Probability[1][0]);
         
-        if (normalpostprob >= alteredpostprob)
+        if (tr_normalpostprob >= tr_alteredpostprob)
         {
-            printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Normal", i+1, normalpostprob, alteredpostprob);
+            printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Normal", t+1, tr_normalpostprob, tr_alteredpostprob);
+            tr_result = 0;
         }
         else
         {
-            printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Altered", i+1, normalpostprob, alteredpostprob);
-            result=1;
+            printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Altered", t+1, tr_normalpostprob, tr_alteredpostprob);
+            tr_result = 1;
         }
         
-        if (volunteers[i].output==result)
+        if (volunteers[t].output == tr_result)
         {
-            switch (result)
+            switch (tr_result)
             {
-            case 0:
+            case 1:
                 ConMatrix[0]++;
                 break;
             
-            case 1:
+            case 0:
                 ConMatrix[1]++;
                 break;
             }
         }
         else
         {
-            switch (result)
+            switch (tr_result)
             {
-            case 0:
+            case 1:
                 ConMatrix[2]++;
                 break;
             
-            case 1:
+            case 0:
                 ConMatrix[3]++;
+                break;
+            }
+        }
+    }
+
+    //testing set
+    for (int i=datasplit-1; i <=count; i++){
+        int te_result = 0;
+        double te_normalpostprob = 0;
+        double te_alteredpostprob = 0;
+        //printf("x = %d, y = %d", x,y);
+        te_normalpostprob = (NBProbabilityGrab(0,1,volunteers[i].season) *Gaussian(volunteers[i].age,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1])* NBProbabilityGrab(0,3,volunteers[i].disease) 
+        * NBProbabilityGrab(0,4,volunteers[i].trauma) * NBProbabilityGrab(0,5,volunteers[i].surgical) 
+        * NBProbabilityGrab(0,6,volunteers[i].fever) * NBProbabilityGrab(0,7,volunteers[i].freq) 
+        * NBProbabilityGrab(0,8,volunteers[i].smoke) *Gaussian(volunteers[i].sit,&GaussianMeanVariance[0][1][0],&GaussianMeanVariance[0][1][1]) * Probability[0][0]);
+
+        te_alteredpostprob = (NBProbabilityGrab(1,1,volunteers[i].season) *Gaussian(volunteers[i].age,&GaussianMeanVariance[1][0][0],&GaussianMeanVariance[1][0][1]) * NBProbabilityGrab(1,3,volunteers[i].disease) 
+        * NBProbabilityGrab(1,4,volunteers[i].trauma) * NBProbabilityGrab(1,5,volunteers[i].surgical) 
+        * NBProbabilityGrab(1,6,volunteers[i].fever) * NBProbabilityGrab(1,7,volunteers[i].freq) 
+        * NBProbabilityGrab(1,8,volunteers[i].smoke)*Gaussian(volunteers[i].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1])* Probability[1][0]);
+        
+        if (te_normalpostprob >= te_alteredpostprob)
+        {
+            printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Normal", i+1, te_normalpostprob, te_alteredpostprob);
+            te_result = 0;
+        }
+        else
+        {
+            printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Altered", i+1, te_normalpostprob, te_alteredpostprob);
+            te_result = 1;
+        }
+        
+        if (volunteers[i].output == te_result)
+        {
+            switch (te_result)
+            {
+            case 1:
+                ConMatrix[4]++;
+                break;
+            
+            case 0:
+                ConMatrix[5]++;
+                break;
+            }
+        }
+        else
+        {
+            switch (te_result)
+            {
+            case 1:
+                ConMatrix[6]++;
+                break;
+            
+            case 0:
+                ConMatrix[7]++;
                 break;
             }
         }
         
     }
+}
+
+void CalProbError(int split, int count){
+    //training set
+    for(int t = 0; t < split-1; t++){
+        int tr_result = 0;
+        double tr_normal = 0;
+        double tr_altered = 0;
+
+        //printf("x = %d, y = %d", x,y);
+        tr_normal = (NBProbabilityGrab(0,1,volunteers[t].season) *Gaussian(volunteers[t].age,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1])* NBProbabilityGrab(0,3,volunteers[t].disease) 
+        * NBProbabilityGrab(0,4,volunteers[t].trauma) * NBProbabilityGrab(0,5,volunteers[t].surgical) 
+        * NBProbabilityGrab(0,6,volunteers[t].fever) * NBProbabilityGrab(0,7,volunteers[t].freq) 
+        * NBProbabilityGrab(0,8,volunteers[t].smoke) *Gaussian(volunteers[t].sit,&GaussianMeanVariance[0][1][0],&GaussianMeanVariance[0][1][1]) * Probability[0][0]);
+
+        tr_altered = (NBProbabilityGrab(1,1,volunteers[t].season) *Gaussian(volunteers[t].age,&GaussianMeanVariance[1][0][0],&GaussianMeanVariance[1][0][1]) * NBProbabilityGrab(1,3,volunteers[t].disease) 
+        * NBProbabilityGrab(1,4,volunteers[t].trauma) * NBProbabilityGrab(1,5,volunteers[t].surgical) 
+        * NBProbabilityGrab(1,6,volunteers[t].fever) * NBProbabilityGrab(1,7,volunteers[t].freq) 
+        * NBProbabilityGrab(1,8,volunteers[t].smoke)*Gaussian(volunteers[t].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1])* Probability[1][0]);
+        
+        if (tr_normal >= tr_altered)
+        {
+            tr_result = 0;
+        }
+        else
+        {
+            tr_result = 1;
+        }
+        
+        if (volunteers[t].output != tr_result)
+        {
+            tr_ProbError[(split/10)-5]++;
+        }
+    }
+    tr_ProbError[(split/10)-5] = tr_ProbError[(split/10)-5]/split;
+
+    //testing set
+    for (int i = split-1; i <=count; i++){
+        int te_result = 0;
+        double te_normal = 0;
+        double te_altered = 0;
+        //printf("x = %d, y = %d", x,y);
+        te_normal = (NBProbabilityGrab(0,1,volunteers[i].season) *Gaussian(volunteers[i].age,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1])* NBProbabilityGrab(0,3,volunteers[i].disease) 
+        * NBProbabilityGrab(0,4,volunteers[i].trauma) * NBProbabilityGrab(0,5,volunteers[i].surgical) 
+        * NBProbabilityGrab(0,6,volunteers[i].fever) * NBProbabilityGrab(0,7,volunteers[i].freq) 
+        * NBProbabilityGrab(0,8,volunteers[i].smoke) *Gaussian(volunteers[i].sit,&GaussianMeanVariance[0][1][0],&GaussianMeanVariance[0][1][1]) * Probability[0][0]);
+
+        te_altered = (NBProbabilityGrab(1,1,volunteers[i].season) *Gaussian(volunteers[i].age,&GaussianMeanVariance[1][0][0],&GaussianMeanVariance[1][0][1]) * NBProbabilityGrab(1,3,volunteers[i].disease) 
+        * NBProbabilityGrab(1,4,volunteers[i].trauma) * NBProbabilityGrab(1,5,volunteers[i].surgical) 
+        * NBProbabilityGrab(1,6,volunteers[i].fever) * NBProbabilityGrab(1,7,volunteers[i].freq) 
+        * NBProbabilityGrab(1,8,volunteers[i].smoke)*Gaussian(volunteers[i].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1])* Probability[1][0]);
+        
+        if (te_normal >= te_altered)
+        {
+            te_result = 0;
+        }
+        else
+        {
+            te_result = 1;
+        }
+        
+        if (volunteers[i].output != te_result)
+        {
+            te_ProbError[((count-split)/10)-1]++;
+        }
+    }
+    te_ProbError[((count-split)/10)-1] = te_ProbError[((count-split)/10)-1]/(count-split);
 }
