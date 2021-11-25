@@ -3,9 +3,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "pbPlots.h"
-#include "supportLib.h"
-
 #define pi 3.14159
 
 //A datatype that can store multiple items with different data types
