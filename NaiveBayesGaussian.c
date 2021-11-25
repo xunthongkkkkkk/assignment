@@ -128,14 +128,14 @@ int main(void) {
 
     char *tr_commandsGnuPlot[] = {
         "set title \"Training Set Probability of Error\"",
-        "plot 'data_tr.temp'",
+        "plot 'data_tr.temp' with lines",
         "set xlabel \"Split Value\"",
         "set ylabel \"Probability of Error\""
     };
 
     char *te_commandsGnuPlot[] = {
         "set title \"Testing Set Probability of Error\"",
-        "plot 'data_te.temp'",
+        "plot 'data_te.temp' with lines",
         "set xlabel \"Split Value\"",
         "set ylabel \"Probability of Error\""
     };
