@@ -125,40 +125,48 @@ int main(void) {
         printf("\n\n trProbError[%d] = %f", (split/10)-5, tr_ProbError[(split/10)-5]);
         printf("\n\n teProbError[%d] = %f", (split/10)-5, te_ProbError[(split/10)-5]);
     }
-    
+
+    char *tr_commandsGnuPlot[] = {
+        "set title \"Training Set Probability of Error\"",
+        "plot 'data_tr.temp'",
+        "set xlabel \"Split Value\"",
+        "set ylabel \"Probability of Error\""
+    };
+
+    char *te_commandsGnuPlot[] = {
+        "set title \"Testing Set Probability of Error\"",
+        "plot 'data_te.temp'",
+        "set xlabel \"Split Value\"",
+        "set ylabel \"Probability of Error\""
+    };
+
+
     double tr_x[5] = {50.0, 60.0, 70.0, 80.0, 90.0};
     double te_x[5] = {50.0, 40.0, 30.0, 20.0, 10.0};
 
-    FILE *tr_gnuplot = _popen("gnuplot -persistent", "w");
-    FILE *te_gnuplot = _popen("gnuplot -persistent", "w");
+    FILE *temp_tr = fopen("data_tr.temp", "w");
+    FILE *temp_te = fopen("data_te.temp", "w");
 
+    FILE *tr_gnuplot = popen("gnuplot -persistent", "w");
+    FILE *te_gnuplot = popen("gnuplot -persistent", "w");
 
-    fprintf(tr_gnuplot, "plot '-'\n");
-    fprintf(te_gnuplot, "plot '-'\n");
-    
     int i;
 
     for(int i = 0; i < 5; i++){
-        fprintf(tr_gnuplot, "%lf %lf\n", tr_x[i], tr_ProbError[i]);
+        fprintf(temp_tr, "%f %f\n", tr_x[i], tr_ProbError[i]);
+    }
+
+    for(int i = 0; i < 4; i++){
+        fprintf(tr_gnuplot, "%s \n", tr_commandsGnuPlot[i]);
     }
 
     for(int i = 0; i < 5; i++){
-        fprintf(te_gnuplot, "%lf %lf\n", te_x[i], te_ProbError[i]);
+        fprintf(temp_te, "%f %f\n", te_x[i], te_ProbError[i]);
     }
 
-    fprintf(tr_gnuplot, "set xlabel Split\n");
-    fprintf(tr_gnuplot, "set ylabel ProbabilityOfError\n");
-    fprintf(tr_gnuplot, "set xrange [0:100]\n");
-    fprintf(tr_gnuplot, "set zeroaxis\n");
-    fprintf(tr_gnuplot, "set grid\n");
-    fprintf(tr_gnuplot, "set style data lines\n");
-    
-    fprintf(tr_gnuplot, "e");
-    fprintf(te_gnuplot, "e");
-
-    fflush(tr_gnuplot);
-    fflush(te_gnuplot);
-    //fclose(gnuplot);
+    for(int i = 0; i < 4; i++){
+        fprintf(te_gnuplot, "%s \n", te_commandsGnuPlot[i]);
+    }
 
 }
 
