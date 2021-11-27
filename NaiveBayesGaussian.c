@@ -627,17 +627,10 @@ void plotGraph(int count){
 
     //send styling command to gnu plot
     //training data plot
-    char *tr_commandsGnuPlot[] = {
-        "set title \"Training Set Probability of Error\"",
-        "plot 'data_tr.temp' with lines",
-        "set xlabel \"Split Value\"",
-        "set ylabel \"Probability of Error\""
-    };
-
-    //testing data plot
-    char *te_commandsGnuPlot[] = {
-        "set title \"Testing Set Probability of Error\"",
-        "plot 'data_te.temp' with lines",
+    char *trte_commandsGnuPlot[] = {
+        "set title \"Probability of Error\"",
+        "plot 'trainingset.temp' with lines",
+        "replot 'testingset.temp' with lines ls 3",
         "set xlabel \"Split Value\"",
         "set ylabel \"Probability of Error\""
     };
@@ -646,30 +639,25 @@ void plotGraph(int count){
     double tr_x[5] = {50.0, 60.0, 70.0, 80.0, 90.0};
     double te_x[5] = {50.0, 40.0, 30.0, 20.0, 10.0};
 
-    FILE *temp_tr = fopen("data_tr.temp", "w");
-    FILE *temp_te = fopen("data_te.temp", "w");
+    FILE *temp_tr = fopen("trainingset.temp", "w");
+    FILE *temp_te = fopen("testingset.temp", "w");
 
-    FILE *tr_gnuplot = popen("gnuplot -persistent", "w");
-    FILE *te_gnuplot = popen("gnuplot -persistent", "w");
+    FILE *trte_gnuplot = popen("gnuplot -persistent", "w");
+    //FILE *te_gnuplot = popen("gnuplot -persistent", "w");
 
     int i;
 
     //pass probability of error data value to temp file
     for(int i = 0; i < 5; i++){
         fprintf(temp_tr, "%f %f\n", tr_x[i], tr_ProbError[i]);
-    }
-
-    //pass command to gnu plot
-    for(int i = 0; i < 4; i++){
-        fprintf(tr_gnuplot, "%s \n", tr_commandsGnuPlot[i]);
-    }
-
-    for(int i = 0; i < 5; i++){
         fprintf(temp_te, "%f %f\n", te_x[i], te_ProbError[i]);
     }
 
-    for(int i = 0; i < 4; i++){
-        fprintf(te_gnuplot, "%s \n", te_commandsGnuPlot[i]);
+    //pass command to gnu plot
+    for(int i = 0; i < 5; i++){
+        fprintf(trte_gnuplot, "%s \n", trte_commandsGnuPlot[i]);
+       // fprintf(trte_gnuplot, "%s \n", te_commandsGnuPlot[i]);
     }
+
 
 }
