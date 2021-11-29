@@ -52,6 +52,9 @@ void CalProbError(int start, int split ,int end);
 //Function to plot graph of Probability of Error
 void plotGraph(int count);
 
+//Function to plot confusion matrix
+void plotMatrix(int *matrix, int testing, int training, char *string);
+
 //So that it can read 100 line of text file
 struct dataset *volunteers;
 
@@ -170,9 +173,9 @@ int main(void) {
         datasplit=81;
         NBProbability(0,datasplit-2);
         ProbabilityMain(0,datasplit-2,volunteers);
-        printf("\n\nFor Training Data Set of 80 records: \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
+        //printf("\n\nFor Training Data Set of 80 records: \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
         ProbabilityMain(datasplit-1,count,volunteers);
-        printf("\n\nFor Testing Data Set of 20 records: \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
+        //printf("\n\nFor Testing Data Set of 20 records: \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
     
         plotGraph(count);
 
@@ -549,15 +552,44 @@ void ProbabilityMain(int start, int stop, struct dataset * datacheck ){
 
 void CalProbError(int start , int split ,int end)
 {
+    char TrainTest[2][15]={"Training","Testing"};
     NBProbability(start,end);
     ProbabilityMain(start,split-1,volunteers);
-    printf("\n\nFor Training Data Set split %d \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",split, ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
+    //printf("\n\nFor Training Data Set split %d \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",split, ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
     tr_ProbError[(split/10)-5]=((float)(ConMatrix[2]+ConMatrix[3])/(float)(ConMatrix[0]+ConMatrix[1]+ConMatrix[2]+ConMatrix[3]));
-    printf("\n TR ProbError: %f",tr_ProbError[(split/10)-5]);
+    //printf("\n TR ProbError: %f",tr_ProbError[(split/10)-5]);
+    plotMatrix(ConMatrix,(1+end-split),split,TrainTest[0]);
     ProbabilityMain(split,end,volunteers);
-    printf("\n\nFor testing Data Set split %d \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",(1+end-split), ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
+    //printf("\n\nFor testing Data Set split %d \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",(1+end-split), ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
     te_ProbError[(split/10)-5]=((float)(ConMatrix[2]+ConMatrix[3])/(float)(ConMatrix[0]+ConMatrix[1]+ConMatrix[2]+ConMatrix[3]));
-    printf("\n TE ProbError: %f",te_ProbError[(split/10)-5]);
+    plotMatrix(ConMatrix,(1+end-split),split,TrainTest[1]);
+    //printf("\n TE ProbError: %f",te_ProbError[(split/10)-5]);
+}
+
+void plotMatrix(int *matrix, int testing, int training, char *string)
+{
+    
+    FILE *gnuplot = popen("gnuplot -persistent", "w");
+    fprintf(gnuplot, "reset \n"
+        "$matrix <<EOD \n"
+        "%d %d \n"
+        "%d %d \n"
+        "EOD \n"
+        "set autoscale fix\n"
+        "set tics scale 0\n"
+        "set xrange[-0.5:1.5] \n"
+        "set yrange [-0.5:1.5] \n"
+        "set palette defined (0 'red', 1 'green') \n"
+        "set title \"%s dataset %d:%d split\" \n"
+        "set label 1 \"True Negetive\" at -0.15, 0.8 front nopoint\n"
+        "set label 2 \"False Negetive\" at 0.85, 0.8 front nopoint\n"
+        "set label 3 \"False Positive\" at -0.15, -0.25 front nopoint\n"
+        "set label 4 \"True Positive\" at 0.85, -0.25 front nopoint\n"
+        "unset cbtics \n"
+        "unset key \n"
+        "plot '$matrix' with image,'' matrix using 1:2:(sprintf('%%d',$3)) with labels font ',16' \n", matrix[2],matrix[0],matrix[1],matrix[3],string,training,testing
+    
+    );
 }
 
 void plotGraph(int count){
@@ -580,7 +612,6 @@ void plotGraph(int count){
 
     //x label for plotting training set and testing set
     char tr_x[5][10] = {"50:50", "60:40", "70:30", "80:20", "90:10"};
-    double te_x[5] = {50.0, 40.0, 30.0, 20.0, 10.0};
 
     FILE *temp_tr = fopen("trainingset.temp", "w");
     FILE *temp_te = fopen("testingset.temp", "w");
