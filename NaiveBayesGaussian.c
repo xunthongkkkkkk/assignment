@@ -499,15 +499,15 @@ void ProbabilityMain(int start, int stop, struct dataset * datacheck ){
         double tr_normalpostprob = 0;
         double tr_alteredpostprob = 0;
         //printf("x = %d, y = %d", x,y);
-        tr_normalpostprob = (NBProbabilityGrab(0,1,datacheck[t].season) *Gaussian(datacheck[t].age,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1])* NBProbabilityGrab(0,3,datacheck[t].disease) 
-        * NBProbabilityGrab(0,4,datacheck[t].trauma) * NBProbabilityGrab(0,5,datacheck[t].surgical) 
-        * NBProbabilityGrab(0,6,datacheck[t].fever) * NBProbabilityGrab(0,7,datacheck[t].freq) 
-        * NBProbabilityGrab(0,8,datacheck[t].smoke) *Gaussian(datacheck[t].sit,&GaussianMeanVariance[0][1][0],&GaussianMeanVariance[0][1][1]) * Probability[0][0]);
+        tr_normalpostprob = (log(NBProbabilityGrab(0,1,datacheck[t].season)) + log(Gaussian(datacheck[t].age,&GaussianMeanVariance[0][0][0],&GaussianMeanVariance[0][0][1]))+ log(NBProbabilityGrab(0,3,datacheck[t].disease)) 
+        + log(NBProbabilityGrab(0,4,datacheck[t].trauma)) + log(NBProbabilityGrab(0,5,datacheck[t].surgical)) 
+        + log(NBProbabilityGrab(0,6,datacheck[t].fever)) + log(NBProbabilityGrab(0,7,datacheck[t].freq)) 
+        + log(NBProbabilityGrab(0,8,datacheck[t].smoke)) +log(Gaussian(datacheck[t].sit,&GaussianMeanVariance[0][1][0],&GaussianMeanVariance[0][1][1])) + log(Probability[0][0]));
 
-        tr_alteredpostprob = (NBProbabilityGrab(1,1,datacheck[t].season) *Gaussian(datacheck[t].age,&GaussianMeanVariance[1][0][0],&GaussianMeanVariance[1][0][1]) * NBProbabilityGrab(1,3,datacheck[t].disease) 
-        * NBProbabilityGrab(1,4,datacheck[t].trauma) * NBProbabilityGrab(1,5,datacheck[t].surgical) 
-        * NBProbabilityGrab(1,6,datacheck[t].fever) * NBProbabilityGrab(1,7,datacheck[t].freq) 
-        * NBProbabilityGrab(1,8,datacheck[t].smoke)*Gaussian(datacheck[t].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1])* Probability[1][0]);
+        tr_alteredpostprob = (log(NBProbabilityGrab(1,1,datacheck[t].season)) +log(Gaussian(datacheck[t].age,&GaussianMeanVariance[1][0][0],&GaussianMeanVariance[1][0][1])) + log(NBProbabilityGrab(1,3,datacheck[t].disease)) 
+        + log(NBProbabilityGrab(1,4,datacheck[t].trauma)) + log(NBProbabilityGrab(1,5,datacheck[t].surgical)) 
+        + log(NBProbabilityGrab(1,6,datacheck[t].fever)) + log(NBProbabilityGrab(1,7,datacheck[t].freq)) 
+        + log(NBProbabilityGrab(1,8,datacheck[t].smoke))+ log(Gaussian(datacheck[t].sit,&GaussianMeanVariance[1][1][0],&GaussianMeanVariance[1][1][1]))+ log(Probability[1][0]));
         
         if (tr_normalpostprob >= tr_alteredpostprob)
         {
