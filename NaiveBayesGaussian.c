@@ -119,7 +119,7 @@ int main(void) {
         }
 
     }
-    printf("Sperm Fertility Prediction Using Naive Bayes and Gaussian Distrubution\n\nDo you wish to perform predictions(1) or enter diagnostic mode for the program(2)?");
+    printf("Sperm Fertility Prediction Using Naive Bayes and Gaussian Distrubution\n\nDo you wish to perform predictions(1) or enter diagnostic mode for the program(2)? : ");
     while (1)
     {
         scanf("%d", &choice);
@@ -135,24 +135,106 @@ int main(void) {
     {
     case 1://Prediction Mode
 
-        printf("\nPlease Input value for Season of analysis:");
-        scanf("%f",&drInput[0].season);
-        printf("\nPlease Input value for Age of Analysis:");
-        scanf("%f",&drInput[0].age);
-        printf("\nPlease Input value for Childish Disease:");
-        scanf("%d",&drInput[0].disease);
-        printf("\nPlease Input value for Accident or serious trauma:");
-        scanf("%d",&drInput[0].trauma);
-        printf("\nPlease Input value for Surgical Intervention:");
-        scanf("%d",&drInput[0].surgical);
-        printf("\nPlease Input value for High fevers in last year:");
-        scanf("%d",&drInput[0].fever);
-        printf("\nPlease Input value for Frequency of alcohol consumption:");
-        scanf("%f",&drInput[0].freq);
-        printf("\nPlease Input value for Smoking Habit:");
-        scanf("%d",&drInput[0].smoke);
-        printf("\nPlease Input calue for Number of hours spent sitting per day:");
-        scanf("%f",&drInput[0].sit);
+        while (1)
+        {
+            printf("\nPlease Input value for Season of analysis:");
+            scanf("%f",&drInput[0].season);
+            if(drInput[0].season == -1 || drInput[0].season == (float)(-0.33)|| drInput[0].season == (float)(0.33)||drInput[0].season == 1)
+            {
+                break;
+            }
+
+            printf("\nPlease input a valid value for Season of analysis!\n");
+        }
+    
+        
+        while (1)
+        {
+            printf("\nPlease Input value for Age of Analysis:");
+            scanf("%f",&drInput[0].age);
+            if(drInput[0].age >= 0 && drInput[0].age <= 1 )
+            {
+                break;
+            }
+            printf("\nPlease input a valid value for Age of Analysis! \n");
+        }
+
+        while (1)
+        {
+            printf("\nPlease Input value for Childish Disease:");
+            scanf("%d",&drInput[0].disease);
+            if(drInput[0].disease == 0 || drInput[0].disease == 1 )
+            {
+                break;
+            }
+            printf("\nPlease Input a valid value for Childish Disease! \n");
+        }
+        
+        while (1)
+        {
+            printf("\nPlease Input value for Accident or serious trauma:");
+            scanf("%d",&drInput[0].trauma);
+            if(drInput[0].trauma == 0 || drInput[0].trauma == 1 )
+            {
+                break;
+            }
+            printf("\nPlease Input a valid value for Accident or serious trauma! \n");
+        }
+        
+        while (1)
+        {
+            printf("\nPlease Input value for Surgical Intervention:");
+            scanf("%d",&drInput[0].surgical);
+            if(drInput[0].surgical == 0 || drInput[0].surgical == 1 )
+            {
+                break;
+            }
+            printf("\nPlease Input a valid value for Surgical Intervention! \n");
+        }
+        
+        while (1)
+        {
+            printf("\nPlease Input value for High fevers in last year:");
+            scanf("%d",&drInput[0].fever);
+            if(drInput[0].fever == 0 || drInput[0].fever == 1 || drInput[0].fever==-1)
+            {
+                break;
+            }
+            printf("\nPlease Input a valid value for High fevers in last year! \n");
+        }
+        
+        while (1)
+        {
+            printf("\nPlease Input value for Frequency of alcohol consumption:");
+            scanf("%f",&drInput[0].freq);
+            if(drInput[0].freq == 1 || drInput[0].season == (float)(0.2)|| drInput[0].season == (float)(0.4)||drInput[0].season == (float)(0.6)||drInput[0].season == (float)(0.8))
+            {
+                break;
+            }
+            printf("\nPlease Input a valid value for Frequency of alcohol consumption! \n");
+        }
+
+        while (1)
+        {
+            printf("\nPlease Input value for Smoking Habit:");
+            scanf("%d",&drInput[0].smoke);
+            if(drInput[0].smoke == 0 || drInput[0].smoke == 1 || drInput[0].smoke==-1)
+            {
+                break;
+            }
+            printf("\nPlease Input a valid value for Smoking Habit! \n");
+        }
+        
+        while (1)
+        {
+            printf("\nPlease Input value for Number of hours spent sitting per day:");
+            scanf("%f",&drInput[0].sit);
+            if(drInput[0].sit >= 0 && drInput[0].sit <= 1 )
+            {
+                break;
+            }
+            printf("\nPlease Input a valid value for Number of hours spent sitting per day! \n");
+        }
         
         drInput[0].output= 1;
         NBProbability(0,99);
@@ -165,7 +247,6 @@ int main(void) {
         {
             printf("\nPrediction: Normal");
         }
-        return 0;
 
         break;
     
