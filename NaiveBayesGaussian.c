@@ -21,10 +21,6 @@ struct dataset
     int output;
 };
 
-
-// Function to calculate the probability for both NB and Gaussian.
-//void ProbabilityCalculator();
-
 // Function to calculate the prior and posterior probability for NB
 void NBProbability();
 
@@ -34,7 +30,7 @@ void Count(int outcome, int i);
 // Function to calculate the mean for the features requiring gaussian Takes in the sum, and count and pointer to address of where to store the mean
 void Mean(double *sum, float *count, double *meanstorelocation);
 
-// Function that returns the squared varience of 
+// Function that returns the squared varience
 void variancesquared(int start, int stop, double *mean, float *count, int outcome, int feature, double *variencestorelocation);
 
 // Function to calculate and return the gaussian probability 
@@ -120,6 +116,7 @@ int main(void) {
 
     }
     printf("Sperm Fertility Prediction Using Naive Bayes and Gaussian Distrubution\n\nDo you wish to perform predictions(1) or enter diagnostic mode for the program(2)? : ");
+    //Obtain choice of operation
     while (1)
     {
         scanf("%d", &choice);
@@ -133,13 +130,13 @@ int main(void) {
     struct dataset drInput[1];
     switch (choice)
     {
-    case 1://Prediction Mode
+    case 1://Prediction Mode Takes doctor input and predict using whole dataset as training
 
         while (1)
         {
             printf("\nPlease Input value for Season of analysis:");
             scanf("%f",&drInput[0].season);
-            if(drInput[0].season == -1 || drInput[0].season == (float)(-0.33)|| drInput[0].season == (float)(0.33)||drInput[0].season == 1)
+            if(drInput[0].season == -1 || drInput[0].season == (float)(-0.33)|| drInput[0].season == (float)(0.33)||drInput[0].season == 1) //verify if the value is valid
             {
                 break;
             }
@@ -152,7 +149,7 @@ int main(void) {
         {
             printf("\nPlease Input value for Age of Analysis:");
             scanf("%f",&drInput[0].age);
-            if(drInput[0].age >= 0 && drInput[0].age <= 1 )
+            if(drInput[0].age >= 0 && drInput[0].age <= 1 )//verify if the value is valid
             {
                 break;
             }
@@ -207,7 +204,7 @@ int main(void) {
         {
             printf("\nPlease Input value for Frequency of alcohol consumption:");
             scanf("%f",&drInput[0].freq);
-            if(drInput[0].freq == 1 || drInput[0].season == (float)(0.2)|| drInput[0].season == (float)(0.4)||drInput[0].season == (float)(0.6)||drInput[0].season == (float)(0.8))
+            if(drInput[0].freq == 1 || drInput[0].freq == (float)(0.2)|| drInput[0].freq == (float)(0.4)||drInput[0].freq == (float)(0.6)||drInput[0].freq == (float)(0.8))
             {
                 break;
             }
@@ -237,8 +234,8 @@ int main(void) {
         }
         
         drInput[0].output= 1;
-        NBProbability(0,99);
-        ProbabilityMain(0,0,drInput);
+        NBProbability(0,count); //use whole dataset for training
+        ProbabilityMain(0,0,drInput); // calculate posterior prob and predict
         if (ConMatrix[0]==1)
         {
             printf("\nPrediction: Altered");
@@ -254,10 +251,7 @@ int main(void) {
         datasplit=81;
         NBProbability(0,datasplit-2);
         ProbabilityMain(0,datasplit-2,volunteers);
-        //printf("\n\nFor Training Data Set of 80 records: \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
         ProbabilityMain(datasplit-1,count,volunteers);
-        //printf("\n\nFor Testing Data Set of 20 records: \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
-    
         plotGraph(count);
 
         break;
@@ -297,9 +291,8 @@ void NBProbability(int start, int stop)
     {
         for (int j = 1; j <=21; j++)
         {
-            //printf("\n Before Calculation, outcome: %d  Outcome Count:: %f Variable: %d count: %f", k,Probability[k][0], j, Probability[k][j]);
+            
             Probability[k][j] = (Probability[k][j]+1)/(Probability[k][0]+21 ); //accounts for the fact that there are features that do not appear in the training data. Setting alpha as 1
-            //printf("\n outcome: %d Variable: %d Probability: %f", k, j, Probability[k][j]);
         }
         
     }
@@ -308,7 +301,6 @@ void NBProbability(int start, int stop)
     // Obtaining the mean and varience
 
     //calculates the mean by taking the sum from the GaussianMeanVarience Array and count from the Probability array and stores it into the back into the GaussianMeanVarience Array
-    //printf("\n normal Count: %f", Probability[0][0]);
     for (int l = 0; l<=1; l++)
     {
         for (int m = 0; m <=1; m++)
@@ -323,7 +315,6 @@ void NBProbability(int start, int stop)
     totalcount = Probability[0][0] + Probability[1][0];
     Probability[0][0] = Probability[0][0]/(totalcount);
     Probability[1][0] = Probability[1][0]/(totalcount);
-    //printf("\nPrior Prob:\n Normal: %f \n Altered: %f", Probability[0][0],Probability[1][0]);
     
 }
 
@@ -337,7 +328,7 @@ void Count(int outcome, int i)
         Probability[outcome][1]++;
     }
     else if (volunteers[i].season == (float)(-0.33)) //Spring
-    {
+    {   
         Probability[outcome][2]++;
     }
     else if (volunteers[i].season == (float)(0.33)) //Summer
@@ -436,32 +427,30 @@ void Count(int outcome, int i)
 
     // Used to obtain the summation of the normal and altered values for features requiring gaussian
     GaussianMeanVariance[outcome][0][0]+=volunteers[i].age;
-    //printf("\n %d normal age (%f) sum %f",i ,volunteers[i].age,GaussianMeanVariance[0][0][0]);
     GaussianMeanVariance[outcome][1][0]+=volunteers[i].sit;
 
 }
 
 void Mean(double *sum, float *count, double *storelocation)
 {
-    //printf("\n sum: %f", *sum);
-    //printf("\n count: %f", *count);
+
     float mean = 0;
     mean = (1.0/(*count)) * (*sum);
     *storelocation = mean;
-    //printf("\n Mean: %f", mean);
 
 }
-
+// Perform calculations of for the varience to be used for gaussian probability. Takes in starting and stopping index, which feature to check, pointer to the mean 
+// and count values and pointer to the location to store the varience
 void variancesquared(int start, int stop, double *mean, float *count, int outcome, int feature, double *variencestorelocation)
 {
-    switch (feature)
+    switch (feature) //check if its age (1)or sitting(2)
     {
     case 0:
         for (int i = start; i <= stop ; i++)
         {
             if(volunteers[i].output==outcome)
             {
-                *variencestorelocation += pow((volunteers[i].age-*mean),2);
+                *variencestorelocation += pow((volunteers[i].age-*mean),2); //calculate varience and add it into the value of variencestorelocation
             }
         }
         
@@ -478,16 +467,16 @@ void variancesquared(int start, int stop, double *mean, float *count, int outcom
         break;
     }
     
-    *variencestorelocation *= 1.0/(*count-1);
-    // printf("\n varience: %f", *variencestorelocation);
+    *variencestorelocation *= 1.0/(*count-1); //mutiply by 1/n as per the formula for varience
+
 }
 
 double Gaussian(float inputx, double *mean, double *varience)
 {
-    return (1/(sqrt(2*pi)))*exp(-0.5*(pow((inputx-*mean),2)/ *varience ));
+    return (1/(sqrt(2*pi)))*exp(-0.5*(pow((inputx-*mean),2)/ *varience )); // calculate gaussian and return value as a double
 
 }
-
+//returns the probability of based on the output, feature and condition of feature entered
 float NBProbabilityGrab(int output,int feature,float input){
 
     if(feature == 1){
@@ -570,7 +559,7 @@ float NBProbabilityGrab(int output,int feature,float input){
     
 }
 
-// Function calculates and determines 
+// Function calculates and determines posterior probability and confusion matrix
 void ProbabilityMain(int start, int stop, struct dataset * datacheck ){
     //zeroize Con Matrix
     memset(ConMatrix, 0, sizeof(ConMatrix)); 
@@ -592,25 +581,25 @@ void ProbabilityMain(int start, int stop, struct dataset * datacheck ){
         
         if (tr_normalpostprob >= tr_alteredpostprob)
         {
-            //printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Normal", t+1, tr_normalpostprob, tr_alteredpostprob);
+           
             tr_result = 0;
         }
         else
         {
-            //printf("\nLine %d: Normal Probability: %e  Altered Probability: %e  Prediction: Altered", t+1, tr_normalpostprob, tr_alteredpostprob);
+    
             tr_result = 1;
         }
-        
+        //check if the result is true or false
         if (datacheck[t].output == tr_result)
         {
-            switch (tr_result)
+            switch (tr_result)//check if its true positive of true negetive
             {
             case 1:
-                ConMatrix[0]++;
+                ConMatrix[0]++; //True Positive
                 break;
             
             case 0:
-                ConMatrix[1]++;
+                ConMatrix[1]++;//True Negetive
                 break;
             }
         }
@@ -619,11 +608,11 @@ void ProbabilityMain(int start, int stop, struct dataset * datacheck ){
             switch (tr_result)
             {
             case 1:
-                ConMatrix[2]++;
+                ConMatrix[2]++; //False Positive
                 break;
             
             case 0:
-                ConMatrix[3]++;
+                ConMatrix[3]++; //False Negetive
                 break;
             }
         }
@@ -631,35 +620,34 @@ void ProbabilityMain(int start, int stop, struct dataset * datacheck ){
 
 }
 
+//Perform the calculations for the training split and call function to print confusion matrix
 void CalProbError(int start , int split ,int end)
 {
-    char TrainTest[2][15]={"Training","Testing"};
-    NBProbability(start,end);
-    ProbabilityMain(start,split-1,volunteers);
-    //printf("\n\nFor Training Data Set split %d \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",split, ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
+    char TrainTest[2][15]={"Training","Testing"};//string to print title of confusion matrix
+    NBProbability(start,split);//calculate prior and conditional probability of the training set
+    ProbabilityMain(start,split-1,volunteers);//Calculate posterior probability and populate confusion matrix
     tr_ProbError[(split/10)-5]=((float)(ConMatrix[2]+ConMatrix[3])/(float)(ConMatrix[0]+ConMatrix[1]+ConMatrix[2]+ConMatrix[3]));
-    //printf("\n TR ProbError: %f",tr_ProbError[(split/10)-5]);
-    plotMatrix(ConMatrix,(1+end-split),split,TrainTest[0]);
-    ProbabilityMain(split,end,volunteers);
-    //printf("\n\nFor testing Data Set split %d \nTrue Positive: %d \nTrue Negative: %d \nFalse Positive: %d \nFalse Negative %d ",(1+end-split), ConMatrix[0],ConMatrix[1],ConMatrix[2],ConMatrix[3]);
+    plotMatrix(ConMatrix,(1+end-split),split,TrainTest[0]);//plot confusion matrix of the training split
+    ProbabilityMain(split,end,volunteers);//Calculate posterior probability and populate confusion matrix
     te_ProbError[(split/10)-5]=((float)(ConMatrix[2]+ConMatrix[3])/(float)(ConMatrix[0]+ConMatrix[1]+ConMatrix[2]+ConMatrix[3]));
-    plotMatrix(ConMatrix,(1+end-split),split,TrainTest[1]);
-    //printf("\n TE ProbError: %f",te_ProbError[(split/10)-5]);
+    plotMatrix(ConMatrix,(1+end-split),split,TrainTest[1]);//Plot confusion matrix of the testing split
 }
 
+//Plot confusion matrix 
 void plotMatrix(int *matrix, int testing, int training, char *string)
 {
     
-    FILE *gnuplot = popen("gnuplot -persistent", "w");
-    fprintf(gnuplot, "reset \n"
+    FILE *gnuplot = popen("gnuplot -persistent", "w"); //file pointer to GNUPlot program
+    fprintf(gnuplot, "reset \n" // Styling commands
         "$matrix <<EOD \n"
-        "%d %d \n"
+        "%d %d \n"//Pass values from comatrix in to datablock here
         "%d %d \n"
         "EOD \n"
         "set autoscale fix\n"
         "set tics scale 0\n"
         "set xrange[-0.5:1.5] \n"
         "set yrange [-0.5:1.5] \n"
+        "unset colorbox \n"
         "set palette defined (0 'red', 1 'green') \n"
         "set title \"%s dataset %d:%d split\" \n"
         "set label 1 \"True Negetive\" at -0.15, 0.8 front nopoint\n"
@@ -668,7 +656,7 @@ void plotMatrix(int *matrix, int testing, int training, char *string)
         "set label 4 \"True Positive\" at 0.85, -0.25 front nopoint\n"
         "unset cbtics \n"
         "unset key \n"
-        "plot '$matrix' with image,'' matrix using 1:2:(sprintf('%%d',$3)) with labels font ',16' \n", matrix[2],matrix[0],matrix[1],matrix[3],string,training,testing
+        "plot '$matrix' matrix with image,\'' matrix using 1:2:(sprintf('%%d',$3)) with labels font ',16' \n", matrix[2],matrix[0],matrix[1],matrix[3],string,training,testing
     
     );
 }
@@ -698,7 +686,6 @@ void plotGraph(int count){
     FILE *temp_te = fopen("testingset.temp", "w");
 
     FILE *trte_gnuplot = popen("gnuplot -persistent", "w");
-    //FILE *te_gnuplot = popen("gnuplot -persistent", "w");
 
     int i;
 
@@ -711,7 +698,6 @@ void plotGraph(int count){
     //pass command to gnu plot
     for(int i = 0; i < 5; i++){
         fprintf(trte_gnuplot, "%s \n", trte_commandsGnuPlot[i]);
-       // fprintf(trte_gnuplot, "%s \n", te_commandsGnuPlot[i]);
     }
 
 
